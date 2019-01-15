@@ -1,12 +1,31 @@
 # hapi-i18n
+
 Translation module for hapi based on mashpie's i18n module.
 
 **The latest version is for Hapi 17+. For Hapi versions < 17 use [version 1.0.5](https://github.com/funktionswerk/hapi-i18n/releases/tag/1.0.5)**
 
 ## Installation
+
 ```
 npm install hapi-i18n
 ```
+
+## Why I wrote this module.
+
+This has all the same functionality of the funktionswerk/hapi-i18n except:
+We added another validation option that request.auth.credentials[authCredentialsLanguageCode].
+The authCredentialsLanguageCode defaults to languageCode.
+You can change that in the options {
+...
+authCredentialsLanguageCode: 'languageCode' (or whatever your model says.)
+}
+In order to accomplish the above we where the i18n runs. In funktionswerk/hapi-i18n it runs on the onPreAuth.
+This module runs onPostAuth. We do this otherwise every request.auth.credentials[authCredentialsLanguageCode] will return null.
+I use this in conjunction with hapi-jwt2. https://github.com/dwyl/hapi-auth-jwt2
+
+## To Do
+
+write test for the token.
 
 ## Usage
 
@@ -35,13 +54,14 @@ html(lang=languageCode)
     p!= __("hello", {name:"Manu"})
 ```
 
-
 #### Nunjucks Template
+
 ```
 <p>{{ __("My localized string") }}</p>
 <p>{{ __("hello", {name:"Manu"}) }}</p>
 <p>{{ __("hello", name="Manu2") }}</p>
 ```
+
 #### Handlebars Template
 
 ```html
@@ -90,23 +110,20 @@ await server.register({
 The configuration options are passed directly to mashpie's i18n module.
 To get the full list of available options see [mashpie/i18n-node](https://github.com/mashpie/i18n-node). The default locale is the first locale found in the list, in this example "de".
 
-The requested language is specified by a path parameter *languageCode* in your resource urls:
+The requested language is specified by a path parameter _languageCode_ in your resource urls:
 
 ```js
 server.route({
   method: 'GET',
   path: '/{languageCode}/localized/resource',
   options: {
-    handler: function (request, h) {
-      return (
-        {
-          message: request.i18n.__('My localized string')
-        }
-      );
+    handler: function(request, h) {
+      return {
+        message: request.i18n.__('My localized string')
+      };
     }
   }
 });
-
 ```
 
 Example request:
@@ -114,6 +131,7 @@ Example request:
 ```
 http://localhost/fr/localized/resource.
 ```
+
 The language code is evaluated automatically. If a language code is found for the requested path parameter then the according locale is set.
 If the language code does not match any of the configured language codes, the plugin returns 404 (NotFound).
 
