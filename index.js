@@ -32,8 +32,12 @@ exports.plugin = {
     if (!pluginOptions.locales) {
       throw Error('No locales defined!');
     }
-
-    server.ext('onPreAuth', function(request, h) {
+/**
+ * because we use the request.auth.credentials
+ * we run this module onCredentials.
+ * The original ran onPreAuth which always returned null.
+ */
+    server.ext('onCredentials', function(request, h) {
       request.i18n = {};
       I18n.init(request, request.i18n);
       request.i18n.setLocale(defaultLocale);
