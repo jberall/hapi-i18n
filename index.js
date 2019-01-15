@@ -4,7 +4,7 @@ var Hoek = require('hoek');
 var _ = require('lodash');
 var pkg = require('./package.json');
 
-exports.extractDefaultLocale = function(allLocales){
+exports.extractDefaultLocale = function(allLocales) {
   if (!allLocales) {
     throw new Error('No locales defined!');
   }
@@ -17,44 +17,87 @@ exports.extractDefaultLocale = function(allLocales){
 exports.plugin = {
   name: pkg.name,
   version: pkg.version,
-  pkg: pkg ,
-  register: function(server, options){
+  pkg: pkg,
+  register: function(server, options) {
     var pluginOptions = {};
     if (options) {
       pluginOptions = options;
     }
     I18n.configure(pluginOptions);
 
-    var defaultLocale = pluginOptions.defaultLocale || exports.extractDefaultLocale(pluginOptions.locales);
+    var defaultLocale =
+      pluginOptions.defaultLocale ||
+      exports.extractDefaultLocale(pluginOptions.locales);
 
     if (!pluginOptions.locales) {
       throw Error('No locales defined!');
     }
 
-    server.ext('onPreAuth', function (request, h) {
+    server.ext('onPreAuth', function(request, h) {
       request.i18n = {};
       I18n.init(request, request.i18n);
       request.i18n.setLocale(defaultLocale);
       if (request.params && request.params.languageCode) {
-        if (_.includes(pluginOptions.locales, request.params.languageCode) == false) {
-          throw Boom.notFound('No localization available for ' + request.params.languageCode);
+        if (
+          _.includes(pluginOptions.locales, request.params.languageCode) ==
+          false
+        ) {
+          throw Boom.notFound(
+            'No localization available for ' + request.params.languageCode
+          );
         }
         request.i18n.setLocale(request.params.languageCode);
-      } else if (pluginOptions.queryParameter && request.query && request.query[pluginOptions.queryParameter]) {
-        if (_.includes(pluginOptions.locales, request.query[pluginOptions.queryParameter]) == false) {
-          throw Boom.notFound('No localization available for ' + request.query[pluginOptions.queryParameter]);
+      } else if (
+        pluginOptions.queryParameter &&
+        request.query &&
+        request.query[pluginOptions.queryParameter]
+      ) {
+        if (
+          _.includes(
+            pluginOptions.locales,
+            request.query[pluginOptions.queryParameter]
+          ) == false
+        ) {
+          throw Boom.notFound(
+            'No localization available for ' +
+              request.query[pluginOptions.queryParameter]
+          );
         }
         request.i18n.setLocale(request.query[pluginOptions.queryParameter]);
-      } else if (pluginOptions.languageHeaderField && request.headers[pluginOptions.languageHeaderField]) {
+      } else if (
+        pluginOptions.languageHeaderField &&
+        request.headers[pluginOptions.languageHeaderField]
+      ) {
         var languageCode = request.headers[pluginOptions.languageHeaderField];
         if (languageCode) {
           request.i18n.setLocale(languageCode);
         }
+      } else if (
+      /**
+       * The request.auth.credentials is used commonly in JWT.
+       *
+       * @see https://github.com/dwyl/hapi-auth-jwt2-cookie-example
+       */
+        request.auth.credentials &&
+        request.auth.credentials.languageCode
+      ) {
+        if (
+          _.includes(
+            pluginOptions.locales,
+            request.auth.credentials.languageCode
+          ) == false
+        ) {
+          throw Boom.notFound(
+            'No localization available for ' +
+              request.auth.credentials.languageCode
+          );
+        }
+        request.i18n.setLocale(request.auth.credentials.languageCode);
       }
       return h.continue;
     });
 
-    server.ext('onPreResponse', function (request, h) {
+    server.ext('onPreResponse', function(request, h) {
       if (!request.i18n || !request.response) {
         return h.continue;
       }
@@ -65,7 +108,10 @@ exports.plugin = {
       }
 
       if (response.variety === 'view') {
-        response.source.context = Hoek.merge(response.source.context || {}, request.i18n);
+        response.source.context = Hoek.merge(
+          response.source.context || {},
+          request.i18n
+        );
         response.source.context.languageCode = request.i18n.getLocale();
       }
       return h.continue;
