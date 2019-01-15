@@ -37,7 +37,7 @@ exports.plugin = {
  * we run this module onCredentials.
  * The original ran onPreAuth which always returned null.
  */
-    server.ext('onCredentials', function(request, h) {
+    server.ext('onPostAuth', function(request, h) {
       request.i18n = {};
       I18n.init(request, request.i18n);
       request.i18n.setLocale(defaultLocale);
