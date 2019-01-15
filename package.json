@@ -27,6 +27,8 @@
   },
   "homepage": "https://github.com/codeva/hapi-i18n",
   "devDependencies": {
+    "@types/hapi": "^17.8.2",
+    "@types/i18n": "^0.8.3",
     "handlebars": "^4.0.11",
     "hapi": "^17.2.0",
     "jade": "^1.9.2",
