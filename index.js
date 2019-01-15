@@ -28,15 +28,18 @@ exports.plugin = {
     var defaultLocale =
       pluginOptions.defaultLocale ||
       exports.extractDefaultLocale(pluginOptions.locales);
+    
+    const authCredentialsLanguageCode =
+      pluginOptions.authCredentialsLanguageCode || 'languageCode';
 
     if (!pluginOptions.locales) {
       throw Error('No locales defined!');
     }
-/**
- * because we use the request.auth.credentials
- * we run this module onCredentials.
- * The original ran onPreAuth which always returned null.
- */
+    /**
+     * because we use the request.auth.credentials
+     * we run this module onCredentials.
+     * The original ran onPreAuth which always returned null.
+     */
     server.ext('onPostAuth', function(request, h) {
       request.i18n = {};
       I18n.init(request, request.i18n);
@@ -77,26 +80,26 @@ exports.plugin = {
           request.i18n.setLocale(languageCode);
         }
       } else if (
-      /**
-       * The request.auth.credentials is used commonly in JWT.
-       *
-       * @see https://github.com/dwyl/hapi-auth-jwt2-cookie-example
-       */
+        /**
+         * The request.auth.credentials is used commonly in JWT.
+         *
+         * @see https://github.com/dwyl/hapi-auth-jwt2-cookie-example
+         */
         request.auth.credentials &&
-        request.auth.credentials.languageCode
+        request.auth.credentials[authCredentialsLanguageCode]
       ) {
         if (
           _.includes(
             pluginOptions.locales,
-            request.auth.credentials.languageCode
+            request.auth.credentials[authCredentialsLanguageCode]
           ) == false
         ) {
           throw Boom.notFound(
             'No localization available for ' +
-              request.auth.credentials.languageCode
+              request.auth.credentials[authCredentialsLanguageCode]
           );
         }
-        request.i18n.setLocale(request.auth.credentials.languageCode);
+        request.i18n.setLocale(request.auth.credentials[authCredentialsLanguageCode]);
       }
       return h.continue;
     });
